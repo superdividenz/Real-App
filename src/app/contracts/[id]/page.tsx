@@ -3,9 +3,9 @@ import Link from 'next/link'
 // import { prisma } from '@/lib/prisma'
 
 interface ContractPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 async function getContract(id: string) {
@@ -24,7 +24,8 @@ async function getContract(id: string) {
 }
 
 export default async function ContractPage({ params }: ContractPageProps) {
-  const contract = await getContract(params.id)
+  const { id } = await params
+  const contract = await getContract(id)
 
   if (!contract) {
     notFound()
@@ -69,7 +70,7 @@ export default async function ContractPage({ params }: ContractPageProps) {
             </div>
             <div>
               <span className="font-semibold">Created:</span>
-              <span className="ml-2">{contract.createdAt.toLocaleDateString()}</span>
+              <span className="ml-2">{new Date(contract.createdAt).toLocaleDateString()}</span>
             </div>
             <div>
               <span className="font-semibold">Created By:</span>
@@ -98,7 +99,7 @@ export default async function ContractPage({ params }: ContractPageProps) {
               {contract.signatures.map((signature) => (
                 <div key={signature.id} className="border rounded p-4">
                   <p className="text-sm text-gray-600">
-                    Signed on {signature.signedAt.toLocaleDateString()} at {signature.signedAt.toLocaleTimeString()}
+                    Signed on {new Date(signature.signedAt).toLocaleDateString()} at {new Date(signature.signedAt).toLocaleTimeString()}
                   </p>
                   <img
                     src={signature.data}

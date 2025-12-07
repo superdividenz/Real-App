@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { contracts } from '@/lib/temp-storage'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
     const { clientEmail } = await request.json()
 
-    const contractIndex = contracts.findIndex(c => c.id === params.id)
+    const contractIndex = contracts.findIndex(c => c.id === id)
 
     if (contractIndex === -1) {
       return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
