@@ -1,16 +1,19 @@
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
+// import { prisma } from '@/lib/prisma'
 
 async function getContracts() {
-  return await prisma.contract.findMany({
-    include: {
-      createdBy: true,
-      signedBy: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  })
+  try {
+    const response = await fetch('http://localhost:3000/api/contracts', {
+      cache: 'no-store' // This is a server component, so we need to fetch from the API
+    })
+    if (response.ok) {
+      return await response.json()
+    }
+    return []
+  } catch (error) {
+    console.error('Error fetching contracts:', error)
+    return []
+  }
 }
 
 export default async function ContractsPage() {

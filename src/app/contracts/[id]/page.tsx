@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
+// import { prisma } from '@/lib/prisma'
 
 interface ContractPageProps {
   params: {
@@ -9,14 +9,18 @@ interface ContractPageProps {
 }
 
 async function getContract(id: string) {
-  return await prisma.contract.findUnique({
-    where: { id },
-    include: {
-      createdBy: true,
-      signedBy: true,
-      signatures: true,
-    },
-  })
+  try {
+    const response = await fetch(`http://localhost:3000/api/contracts/${id}`, {
+      cache: 'no-store'
+    })
+    if (response.ok) {
+      return await response.json()
+    }
+    return null
+  } catch (error) {
+    console.error('Error fetching contract:', error)
+    return null
+  }
 }
 
 export default async function ContractPage({ params }: ContractPageProps) {

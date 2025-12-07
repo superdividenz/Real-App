@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { contracts } from '@/lib/temp-storage'
 
 export async function POST(request: NextRequest) {
   try {
     const { title, content, createdById } = await request.json()
 
-    const contract = await prisma.contract.create({
-      data: {
-        title,
-        content,
-        createdById,
-      },
-    })
+    const contract = {
+      id: Date.now().toString(),
+      title,
+      content,
+      createdById,
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: {
+        id: createdById,
+        email: 'admin@example.com',
+        name: 'Admin User',
+        role: 'admin'
+      }
+    }
+
+    contracts.push(contract)
 
     return NextResponse.json(contract, { status: 201 })
   } catch (error) {
@@ -22,17 +32,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const contracts = await prisma.contract.findMany({
-      include: {
-        createdBy: true,
-        signedBy: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    const contractsWithRelations = contracts.map(contract => ({
+      ...contract,
+      signedBy: null,
+    }))
 
-    return NextResponse.json(contracts)
+    return NextResponse.json(contractsWithRelations)
   } catch (error) {
     console.error('Error fetching contracts:', error)
     return NextResponse.json({ error: 'Failed to fetch contracts' }, { status: 500 })

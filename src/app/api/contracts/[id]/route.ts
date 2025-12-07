@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { contracts } from '@/lib/temp-storage'
 
 interface RouteParams {
   params: {
@@ -9,20 +9,19 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const contract = await prisma.contract.findUnique({
-      where: { id: params.id },
-      include: {
-        createdBy: true,
-        signedBy: true,
-        signatures: true,
-      },
-    })
+    const contract = contracts.find(c => c.id === params.id)
 
     if (!contract) {
       return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
     }
 
-    return NextResponse.json(contract)
+    const contractWithSignatures = {
+      ...contract,
+      signatures: contract.signatures || [],
+      signedBy: null,
+    }
+
+    return NextResponse.json(contractWithSignatures)
   } catch (error) {
     console.error('Error fetching contract:', error)
     return NextResponse.json({ error: 'Failed to fetch contract' }, { status: 500 })

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { contracts } from '@/lib/temp-storage'
 
 interface RouteParams {
   params: {
@@ -11,23 +11,26 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { clientEmail } = await request.json()
 
-    // First, find or create the client user
-    let client = await prisma.user.findUnique({
-      where: { email: clientEmail },
-    })
+    const contractIndex = contracts.findIndex(c => c.id === params.id)
 
-    if (!client) {
-      client = await prisma.user.create({
-        data: {
-          email: clientEmail,
-          role: 'client',
-        },
-      })
+    if (contractIndex === -1) {
+      return NextResponse.json({ error: 'Contract not found' }, { status: 404 })
     }
 
     // Update contract status to sent
-    const contract = await prisma.contract.update({
-      where: { id: params.id },
+    contracts[contractIndex] = {
+      ...contracts[contractIndex],
+      status: 'sent',
+      sentAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    return NextResponse.json({ message: 'Contract sent successfully' })
+  } catch (error) {
+    console.error('Error sending contract:', error)
+    return NextResponse.json({ error: 'Failed to send contract' }, { status: 500 })
+  }
+}
       data: {
         status: 'sent',
         sentAt: new Date(),
